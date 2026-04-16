@@ -1,0 +1,18 @@
+[project]
+name = "blinky"
+top = "blinky"
+
+[toolchain]
+quartus-ii-13 = "13.0sp1"
+
+[target]
+family = "Cyclone II"
+device = "EP2C35F672C6"
+
+[hdl]
+standard = "VHDL_2008"
+sources = ["src/*.vhd"]
+
+[pins]
+CLOCK_50 = "PIN_N2"
+LEDR = ["PIN_R17", "PIN_R18", "PIN_U18", "PIN_Y18"]

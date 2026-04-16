@@ -1,0 +1,18 @@
+[project]
+name = "blinky"
+top = "blinky"
+
+[toolchain]
+quartus-prime = "23.1"
+
+[target]
+family = "Cyclone V"
+device = "5CSEBA6U23I7"
+
+[hdl]
+standard = "VHDL_2008"
+sources = ["src/*.vhd"]
+
+[pins]
+clk = "PIN_V11"
+led = ["PIN_W15", "PIN_AA24", "PIN_V16", "PIN_V15"]
