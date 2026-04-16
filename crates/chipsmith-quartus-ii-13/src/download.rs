@@ -33,9 +33,13 @@ pub async fn download_file(url: &str, filename: &str) -> Result<PathBuf, Chipsmi
         .get(url)
         .send()
         .await
-        .map_err(|e| ChipsmithError::Download { message: e.to_string() })?
+        .map_err(|e| ChipsmithError::Download {
+            message: e.to_string(),
+        })?
         .error_for_status()
-        .map_err(|e| ChipsmithError::Download { message: e.to_string() })?;
+        .map_err(|e| ChipsmithError::Download {
+            message: e.to_string(),
+        })?;
     let total = response.content_length();
     let mut stream = response.bytes_stream();
 
@@ -44,7 +48,9 @@ pub async fn download_file(url: &str, filename: &str) -> Result<PathBuf, Chipsmi
     let mut downloaded: u64 = 0;
 
     while let Some(chunk) = stream.next().await {
-        let chunk = chunk.map_err(|e| ChipsmithError::Download { message: e.to_string() })?;
+        let chunk = chunk.map_err(|e| ChipsmithError::Download {
+            message: e.to_string(),
+        })?;
         file.write_all(&chunk).await?;
         downloaded += chunk.len() as u64;
         if let Some(total) = total {

@@ -42,11 +42,26 @@ pub const VERSIONS: &[KnownVersion] = &[
         },
         install_subdir: "23.1std",
         devices: &[
-            DeviceSupport { family: "cyclonev", filename: "cyclonev-23.1std.1.993.qdz" },
-            DeviceSupport { family: "cyclone10lp", filename: "cyclone10lp-23.1std.1.993.qdz" },
-            DeviceSupport { family: "cyclone", filename: "cyclone-23.1std.1.993.qdz" },
-            DeviceSupport { family: "max10", filename: "max10-23.1std.1.993.qdz" },
-            DeviceSupport { family: "max", filename: "max-23.1std.1.993.qdz" },
+            DeviceSupport {
+                family: "cyclonev",
+                filename: "cyclonev-23.1std.1.993.qdz",
+            },
+            DeviceSupport {
+                family: "cyclone10lp",
+                filename: "cyclone10lp-23.1std.1.993.qdz",
+            },
+            DeviceSupport {
+                family: "cyclone",
+                filename: "cyclone-23.1std.1.993.qdz",
+            },
+            DeviceSupport {
+                family: "max10",
+                filename: "max10-23.1std.1.993.qdz",
+            },
+            DeviceSupport {
+                family: "max",
+                filename: "max-23.1std.1.993.qdz",
+            },
         ],
     },
     KnownVersion {
@@ -57,9 +72,10 @@ pub const VERSIONS: &[KnownVersion] = &[
             filename: "QuartusLiteSetup-22.1std.2.922-linux.run",
         },
         install_subdir: "22.1std",
-        devices: &[
-            DeviceSupport { family: "cyclonev", filename: "cyclonev-22.1std.2.922.qdz" },
-        ],
+        devices: &[DeviceSupport {
+            family: "cyclonev",
+            filename: "cyclonev-22.1std.2.922.qdz",
+        }],
     },
     KnownVersion {
         key: "24.1",
@@ -69,9 +85,10 @@ pub const VERSIONS: &[KnownVersion] = &[
             filename: "QuartusLiteSetup-24.1std.0.1077-linux.run",
         },
         install_subdir: "24.1std",
-        devices: &[
-            DeviceSupport { family: "cyclonev", filename: "cyclonev-24.1std.0.1077.qdz" },
-        ],
+        devices: &[DeviceSupport {
+            family: "cyclonev",
+            filename: "cyclonev-24.1std.0.1077.qdz",
+        }],
     },
 ];
 
@@ -107,13 +124,20 @@ pub async fn ensure_installed(version_key: &str) -> Result<PathBuf, ChipsmithErr
     let dir = install_dir_for(version);
 
     if !is_installed(version) {
-        eprintln!("Quartus Prime {} not found, downloading and installing...", version_key);
+        eprintln!(
+            "Quartus Prime {} not found, downloading and installing...",
+            version_key
+        );
 
         let url = cdn_url(&version.download, version.download.filename);
         let installer = download::download_file(&url, version.download.filename).await?;
         download::make_executable(&installer).await?;
 
-        eprintln!("Installing Quartus Prime {} to {}", version_key, dir.display());
+        eprintln!(
+            "Installing Quartus Prime {} to {}",
+            version_key,
+            dir.display()
+        );
         runner::install_quartus(&installer, &dir).await?;
     }
 
@@ -129,12 +153,18 @@ pub async fn ensure_installed(version_key: &str) -> Result<PathBuf, ChipsmithErr
         match download::download_file(&url, device.filename).await {
             Ok(qdz) => {
                 if let Err(e) = download::unzip(&qdz, &dir).await {
-                    eprintln!("Warning: failed to install {} device support: {}", device.family, e);
+                    eprintln!(
+                        "Warning: failed to install {} device support: {}",
+                        device.family, e
+                    );
                     continue;
                 }
             }
             Err(e) => {
-                eprintln!("Warning: failed to download {} device support: {}", device.family, e);
+                eprintln!(
+                    "Warning: failed to download {} device support: {}",
+                    device.family, e
+                );
                 continue;
             }
         }

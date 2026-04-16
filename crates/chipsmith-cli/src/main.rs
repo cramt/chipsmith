@@ -63,15 +63,21 @@ async fn main() -> ExitCode {
 
     let result = match cli.command {
         Commands::Install { version, installer } => match installer {
-            Some(path) => chipsmith_core::install_from_local("quartus-prime", &path, &version).await,
-            None => chipsmith_core::install("quartus-prime", &version).await.map(|_| ()),
+            Some(path) => {
+                chipsmith_core::install_from_local("quartus-prime", &path, &version).await
+            }
+            None => chipsmith_core::install("quartus-prime", &version)
+                .await
+                .map(|_| ()),
         },
 
         Commands::Build { project_dir } => chipsmith_core::build(&project_dir).await.map(|_| ()),
 
-        Commands::Run { tool, version, args } => {
-            chipsmith_core::run_tool("quartus-prime", &version, &tool, &args, None).await
-        }
+        Commands::Run {
+            tool,
+            version,
+            args,
+        } => chipsmith_core::run_tool("quartus-prime", &version, &tool, &args, None).await,
 
         Commands::Which { version } => match chipsmith_core::which("quartus-prime", &version) {
             Ok((dir, true)) => {

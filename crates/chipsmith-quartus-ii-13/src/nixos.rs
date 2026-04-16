@@ -195,13 +195,24 @@ impl NixCompat {
         let ld32 = self.dynamic_linker_32.as_ref()?;
 
         let mut cmd = tokio::process::Command::new(bwrap);
-        cmd.arg("--ro-bind").arg("/").arg("/")
-            .arg("--bind").arg("/tmp").arg("/tmp")
-            .arg("--bind").arg(dirs::home_dir().unwrap_or_default()).arg(dirs::home_dir().unwrap_or_default())
-            .arg("--tmpfs").arg("/lib")
-            .arg("--symlink").arg(ld32).arg("/lib/ld-linux.so.2")
-            .arg("--dev").arg("/dev")
-            .arg("--proc").arg("/proc")
+        cmd.arg("--ro-bind")
+            .arg("/")
+            .arg("/")
+            .arg("--bind")
+            .arg("/tmp")
+            .arg("/tmp")
+            .arg("--bind")
+            .arg(dirs::home_dir().unwrap_or_default())
+            .arg(dirs::home_dir().unwrap_or_default())
+            .arg("--tmpfs")
+            .arg("/lib")
+            .arg("--symlink")
+            .arg(ld32)
+            .arg("/lib/ld-linux.so.2")
+            .arg("--dev")
+            .arg("/dev")
+            .arg("--proc")
+            .arg("/proc")
             .arg(program);
         Some(cmd)
     }

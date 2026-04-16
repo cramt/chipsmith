@@ -16,7 +16,11 @@ pub struct QuartusPrimeToolchain;
 pub const LATEST: &str = install::LATEST;
 
 impl QuartusPrimeToolchain {
-    pub async fn install_from_local(&self, installer: &Path, version: &str) -> Result<(), ChipsmithError> {
+    pub async fn install_from_local(
+        &self,
+        installer: &Path,
+        version: &str,
+    ) -> Result<(), ChipsmithError> {
         let ver = install::lookup(version)?;
         let dir = install::install_dir_for(ver);
         runner::install_quartus(installer, &dir).await

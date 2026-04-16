@@ -1,8 +1,8 @@
 use std::path::{Path, PathBuf};
 use tokio::process::Command;
 
-use chipsmith_toolchain::error::ChipsmithError;
 use crate::nixos;
+use chipsmith_toolchain::error::ChipsmithError;
 
 const KNOWN_TOOLS: &[&str] = &[
     "quartus_sh",

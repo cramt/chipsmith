@@ -39,7 +39,8 @@ impl ToolchainSpec {
     fn validate(&self) -> Result<(), String> {
         if self.0.len() != 1 {
             return Err(
-                "[toolchain] must have exactly one entry (e.g. quartus-prime = \"23.1\")".to_string(),
+                "[toolchain] must have exactly one entry (e.g. quartus-prime = \"23.1\")"
+                    .to_string(),
             );
         }
         Ok(())
@@ -70,9 +71,8 @@ pub enum PinMapping {
 impl Manifest {
     pub fn load(project_dir: &Path) -> Result<Self, ChipsmithError> {
         let path = project_dir.join("chipsmith.toml");
-        let content = std::fs::read_to_string(&path).map_err(|_| ChipsmithError::ManifestNotFound {
-            path: path.clone(),
-        })?;
+        let content = std::fs::read_to_string(&path)
+            .map_err(|_| ChipsmithError::ManifestNotFound { path: path.clone() })?;
         let manifest: Manifest =
             facet_toml::from_str(&content).map_err(|e| ChipsmithError::ManifestParse {
                 path: path.clone(),
@@ -81,10 +81,7 @@ impl Manifest {
         manifest
             .toolchain
             .validate()
-            .map_err(|e| ChipsmithError::ManifestParse {
-                path,
-                message: e,
-            })?;
+            .map_err(|e| ChipsmithError::ManifestParse { path, message: e })?;
         Ok(manifest)
     }
 

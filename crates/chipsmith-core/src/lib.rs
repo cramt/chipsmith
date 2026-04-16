@@ -6,8 +6,8 @@ use error::ChipsmithError;
 use manifest::Manifest;
 use toolchain::Toolchain;
 
-use chipsmith_quartus_prime::QuartusPrimeToolchain;
 use chipsmith_quartus_ii_13::QuartusII13Toolchain;
+use chipsmith_quartus_prime::QuartusPrimeToolchain;
 
 pub const DEFAULT_LATEST: &str = chipsmith_quartus_prime::LATEST;
 
@@ -37,7 +37,11 @@ impl AnyToolchain {
         }
     }
 
-    async fn build(&self, project_dir: &Path, manifest: &Manifest) -> Result<PathBuf, ChipsmithError> {
+    async fn build(
+        &self,
+        project_dir: &Path,
+        manifest: &Manifest,
+    ) -> Result<PathBuf, ChipsmithError> {
         match self {
             Self::QuartusPrime(t) => t.build(project_dir, manifest).await,
             Self::QuartusII13(t) => t.build(project_dir, manifest).await,

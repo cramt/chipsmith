@@ -27,9 +27,30 @@ pub async fn build(project_dir: &Path, manifest: &Manifest) -> Result<PathBuf, C
     )?;
 
     let steps: &[(&str, &[&str])] = &[
-        ("Synthesis", &["quartus_map", &manifest.project.name, "--read_settings_files=on"]),
-        ("Fitter", &["quartus_fit", &manifest.project.name, "--read_settings_files=on"]),
-        ("Assembler", &["quartus_asm", &manifest.project.name, "--read_settings_files=on"]),
+        (
+            "Synthesis",
+            &[
+                "quartus_map",
+                &manifest.project.name,
+                "--read_settings_files=on",
+            ],
+        ),
+        (
+            "Fitter",
+            &[
+                "quartus_fit",
+                &manifest.project.name,
+                "--read_settings_files=on",
+            ],
+        ),
+        (
+            "Assembler",
+            &[
+                "quartus_asm",
+                &manifest.project.name,
+                "--read_settings_files=on",
+            ],
+        ),
         ("Timing analysis", &["quartus_sta", &manifest.project.name]),
     ];
 

@@ -1,8 +1,8 @@
 use std::path::{Path, PathBuf};
 use tokio::process::Command;
 
-use chipsmith_toolchain::error::ChipsmithError;
 use crate::nixos;
+use chipsmith_toolchain::error::ChipsmithError;
 
 const KNOWN_TOOLS: &[&str] = &[
     "quartus_sh",
@@ -99,7 +99,13 @@ pub async fn install_quartus(installer: &Path, install_dir: &Path) -> Result<(),
     }
 
     // Quartus II 13.0sp1 does not have --accept_eula flag
-    let install_args = &["--mode", "unattended", "--unattendedmodeui", "none", "--installdir"];
+    let install_args = &[
+        "--mode",
+        "unattended",
+        "--unattendedmodeui",
+        "none",
+        "--installdir",
+    ];
 
     if nixos::is_nixos() {
         let compat = nixos::NixCompat::init().await?;
