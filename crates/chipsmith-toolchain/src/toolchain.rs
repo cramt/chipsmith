@@ -32,4 +32,32 @@ pub trait Toolchain: Send + Sync {
         project_dir: &Path,
         manifest: &Manifest,
     ) -> Result<PathBuf, ChipsmithError>;
+
+    /// Flash a .sof file to the FPGA via JTAG using quartus_pgm.
+    async fn flash(
+        &self,
+        sof: &Path,
+        manifest: &Manifest,
+        cable: Option<&str>,
+    ) -> Result<(), ChipsmithError> {
+        if !sof.exists() {
+            return Err(ChipsmithError::OutputNotFound {
+                path: sof.to_path_buf(),
+            });
+        }
+
+        let version = manifest.toolchain.version();
+        let mut args = vec![
+            "-m".to_string(),
+            "jtag".to_string(),
+            "-o".to_string(),
+            format!("P;{}", sof.display()),
+        ];
+        if let Some(cable) = cable {
+            args.push("-c".to_string());
+            args.push(cable.to_string());
+        }
+
+        self.run_tool(version, "quartus_pgm", &args, None).await
+    }
 }

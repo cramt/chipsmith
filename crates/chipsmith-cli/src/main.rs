@@ -57,6 +57,21 @@ enum Commands {
         args: Vec<String>,
     },
 
+    /// Flash a .sof file to the FPGA via JTAG
+    Flash {
+        /// Project directory containing chipsmith.toml (default: current dir)
+        #[facet(args::named, default = PathBuf::from("."))]
+        project_dir: PathBuf,
+
+        /// Path to .sof file (default: auto-detect from build output)
+        #[facet(args::named)]
+        sof: Option<PathBuf>,
+
+        /// JTAG cable name (e.g. USB-Blaster)
+        #[facet(args::named)]
+        cable: Option<String>,
+    },
+
     /// Show the install path for a toolchain version
     Which {
         /// Version (default: latest)
@@ -93,6 +108,12 @@ async fn main() -> ExitCode {
             backend,
             args,
         } => chipsmith_core::run_tool(&backend, &version, &tool, &args, None).await,
+
+        Commands::Flash {
+            project_dir,
+            sof,
+            cable,
+        } => chipsmith_core::flash(&project_dir, sof.as_deref(), cable.as_deref()).await,
 
         Commands::Which { version, backend } => match chipsmith_core::which(&backend, &version) {
             Ok((dir, true)) => {

@@ -42,6 +42,9 @@ pub enum ChipsmithError {
     #[error("nix eval failed for `{attr}`: {message}")]
     NixEval { attr: String, message: String },
 
+    #[error("output file not found: {path} (have you run `chipsmith build`?)")]
+    OutputNotFound { path: PathBuf },
+
     #[error("download failed: {message}")]
     Download { message: String },
 

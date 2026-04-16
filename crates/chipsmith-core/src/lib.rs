@@ -57,6 +57,25 @@ pub async fn run_tool(
         .await
 }
 
+/// Flash a .sof file to the FPGA. Reads chipsmith.toml to resolve the backend.
+/// If no sof path is given, uses the default build output.
+pub async fn flash(
+    project_dir: &Path,
+    sof: Option<&Path>,
+    cable: Option<&str>,
+) -> Result<(), ChipsmithError> {
+    let manifest = Manifest::load(project_dir)?;
+    let backend = resolve_backend(manifest.toolchain.backend())?;
+
+    let default_sof = project_dir
+        .join("build")
+        .join("output_files")
+        .join(format!("{}.sof", manifest.project.name));
+    let sof_path = sof.unwrap_or(&default_sof);
+
+    backend.flash(sof_path, &manifest, cable).await
+}
+
 /// Get the install directory for a backend + version.
 pub fn which(backend: &str, version: &str) -> Result<(PathBuf, bool), ChipsmithError> {
     let b = resolve_backend(backend)?;
