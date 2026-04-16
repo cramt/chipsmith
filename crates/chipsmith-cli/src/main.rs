@@ -16,6 +16,33 @@ struct Cli {
 #[derive(Facet)]
 #[repr(u8)]
 enum Commands {
+    /// Create a new chipsmith project
+    Init {
+        /// Project directory (default: current dir)
+        #[facet(args::named, default = PathBuf::from("."))]
+        project_dir: PathBuf,
+
+        /// Project name (default: directory name)
+        #[facet(args::named)]
+        name: Option<String>,
+
+        /// Toolchain backend
+        #[facet(args::named, default = "quartus-prime".to_string())]
+        backend: String,
+
+        /// Toolchain version
+        #[facet(args::named, default = chipsmith_core::DEFAULT_LATEST.to_string())]
+        version: String,
+
+        /// Target FPGA family
+        #[facet(args::named, default = "Cyclone V".to_string())]
+        family: String,
+
+        /// Target FPGA device
+        #[facet(args::named, default = "5CSEBA6U23I7".to_string())]
+        device: String,
+    },
+
     /// Download and install a toolchain
     Install {
         /// Version to install (e.g. 23.1, 22.1, 24.1, 13.0sp1)
@@ -72,6 +99,17 @@ enum Commands {
         cable: Option<String>,
     },
 
+    /// List connected JTAG cables and devices
+    Cables {
+        /// Toolchain backend (quartus-prime or quartus-ii-13)
+        #[facet(args::named, default = "quartus-prime".to_string())]
+        backend: String,
+
+        /// Toolchain version
+        #[facet(args::named, default = chipsmith_core::DEFAULT_LATEST.to_string())]
+        version: String,
+    },
+
     /// Show the install path for a toolchain version
     Which {
         /// Version (default: latest)
@@ -89,6 +127,24 @@ async fn main() -> ExitCode {
     let cli: Cli = figue::from_std_args().unwrap();
 
     let result = match cli.command {
+        Commands::Init {
+            project_dir,
+            name,
+            backend,
+            version,
+            family,
+            device,
+        } => chipsmith_core::init(
+            &project_dir,
+            chipsmith_core::InitOptions {
+                name,
+                backend,
+                version,
+                family,
+                device,
+            },
+        ),
+
         Commands::Install {
             version,
             backend,
@@ -114,6 +170,8 @@ async fn main() -> ExitCode {
             sof,
             cable,
         } => chipsmith_core::flash(&project_dir, sof.as_deref(), cable.as_deref()).await,
+
+        Commands::Cables { backend, version } => chipsmith_core::cables(&backend, &version).await,
 
         Commands::Which { version, backend } => match chipsmith_core::which(&backend, &version) {
             Ok((dir, true)) => {

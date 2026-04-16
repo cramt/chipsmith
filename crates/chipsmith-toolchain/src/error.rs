@@ -45,6 +45,9 @@ pub enum ChipsmithError {
     #[error("output file not found: {path} (have you run `chipsmith build`?)")]
     OutputNotFound { path: PathBuf },
 
+    #[error("chipsmith.toml already exists: {path}")]
+    ProjectAlreadyExists { path: PathBuf },
+
     #[error("download failed: {message}")]
     Download { message: String },
 

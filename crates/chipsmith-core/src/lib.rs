@@ -76,6 +76,97 @@ pub async fn flash(
     backend.flash(sof_path, &manifest, cable).await
 }
 
+/// Scaffold a new chipsmith project.
+pub fn init(project_dir: &Path, opts: InitOptions) -> Result<(), ChipsmithError> {
+    let manifest_path = project_dir.join("chipsmith.toml");
+    if manifest_path.exists() {
+        return Err(ChipsmithError::ProjectAlreadyExists {
+            path: manifest_path,
+        });
+    }
+
+    let abs_dir = project_dir
+        .canonicalize()
+        .unwrap_or_else(|_| project_dir.to_path_buf());
+    let name = opts.name.unwrap_or_else(|| {
+        abs_dir
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("project")
+            .to_string()
+    });
+    // VHDL identifiers can't contain hyphens or start with digits
+    let name = name.replace('-', "_");
+
+    let toml = format!(
+        r#"[project]
+name = "{name}"
+top = "{name}"
+
+[toolchain]
+{backend} = "{version}"
+
+[target]
+family = "{family}"
+device = "{device}"
+
+[hdl]
+sources = ["src/*.vhd"]
+
+[pins]
+"#,
+        backend = opts.backend,
+        version = opts.version,
+        family = opts.family,
+        device = opts.device,
+    );
+
+    std::fs::create_dir_all(project_dir)?;
+    std::fs::write(&manifest_path, &toml)?;
+
+    let src_dir = project_dir.join("src");
+    std::fs::create_dir_all(&src_dir)?;
+
+    let vhdl_path = src_dir.join(format!("{name}.vhd"));
+    if !vhdl_path.exists() {
+        let vhdl = format!(
+            r#"library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity {name} is
+    port (
+        clk : in std_logic
+    );
+end entity;
+
+architecture rtl of {name} is
+begin
+end architecture;
+"#,
+        );
+        std::fs::write(&vhdl_path, &vhdl)?;
+    }
+
+    eprintln!("Created chipsmith.toml and src/{name}.vhd");
+    Ok(())
+}
+
+pub struct InitOptions {
+    pub name: Option<String>,
+    pub backend: String,
+    pub version: String,
+    pub family: String,
+    pub device: String,
+}
+
+/// List connected JTAG cables and devices.
+pub async fn cables(backend: &str, version: &str) -> Result<(), ChipsmithError> {
+    resolve_backend(backend)?
+        .run_tool(version, "jtagconfig", &[], None)
+        .await
+}
+
 /// Get the install directory for a backend + version.
 pub fn which(backend: &str, version: &str) -> Result<(PathBuf, bool), ChipsmithError> {
     let b = resolve_backend(backend)?;
