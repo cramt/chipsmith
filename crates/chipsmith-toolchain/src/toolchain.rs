@@ -3,6 +3,7 @@ use std::path::{Path, PathBuf};
 use crate::error::ChipsmithError;
 use crate::manifest::Manifest;
 
+#[async_trait::async_trait]
 pub trait Toolchain: Send + Sync {
     fn name(&self) -> &str;
 
@@ -10,22 +11,25 @@ pub trait Toolchain: Send + Sync {
 
     fn is_installed(&self, version: &str) -> Result<bool, ChipsmithError>;
 
-    fn ensure_installed(
-        &self,
-        version: &str,
-    ) -> impl std::future::Future<Output = Result<PathBuf, ChipsmithError>> + Send;
+    async fn ensure_installed(&self, version: &str) -> Result<PathBuf, ChipsmithError>;
 
-    fn run_tool(
+    async fn install_from_local(
+        &self,
+        installer: &Path,
+        version: &str,
+    ) -> Result<(), ChipsmithError>;
+
+    async fn run_tool(
         &self,
         version: &str,
         tool: &str,
         args: &[String],
         working_dir: Option<&Path>,
-    ) -> impl std::future::Future<Output = Result<(), ChipsmithError>> + Send;
+    ) -> Result<(), ChipsmithError>;
 
-    fn build(
+    async fn build(
         &self,
         project_dir: &Path,
         manifest: &Manifest,
-    ) -> impl std::future::Future<Output = Result<PathBuf, ChipsmithError>> + Send;
+    ) -> Result<PathBuf, ChipsmithError>;
 }

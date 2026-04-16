@@ -18,9 +18,13 @@ struct Cli {
 enum Commands {
     /// Download and install a toolchain
     Install {
-        /// Version to install (e.g. 23.1, 22.1, 24.1)
+        /// Version to install (e.g. 23.1, 22.1, 24.1, 13.0sp1)
         #[facet(args::positional, default = chipsmith_core::DEFAULT_LATEST.to_string())]
         version: String,
+
+        /// Toolchain backend (quartus-prime or quartus-ii-13)
+        #[facet(args::named, default = "quartus-prime".to_string())]
+        backend: String,
 
         /// Path to a local installer (skips download)
         #[facet(args::named)]
@@ -44,6 +48,10 @@ enum Commands {
         #[facet(args::named, default = chipsmith_core::DEFAULT_LATEST.to_string())]
         version: String,
 
+        /// Toolchain backend (quartus-prime or quartus-ii-13)
+        #[facet(args::named, default = "quartus-prime".to_string())]
+        backend: String,
+
         /// Arguments passed to the tool
         #[facet(args::positional)]
         args: Vec<String>,
@@ -54,6 +62,10 @@ enum Commands {
         /// Version (default: latest)
         #[facet(args::positional, default = chipsmith_core::DEFAULT_LATEST.to_string())]
         version: String,
+
+        /// Toolchain backend (quartus-prime or quartus-ii-13)
+        #[facet(args::named, default = "quartus-prime".to_string())]
+        backend: String,
     },
 }
 
@@ -62,11 +74,13 @@ async fn main() -> ExitCode {
     let cli: Cli = figue::from_std_args().unwrap();
 
     let result = match cli.command {
-        Commands::Install { version, installer } => match installer {
-            Some(path) => {
-                chipsmith_core::install_from_local("quartus-prime", &path, &version).await
-            }
-            None => chipsmith_core::install("quartus-prime", &version)
+        Commands::Install {
+            version,
+            backend,
+            installer,
+        } => match installer {
+            Some(path) => chipsmith_core::install_from_local(&backend, &path, &version).await,
+            None => chipsmith_core::install(&backend, &version)
                 .await
                 .map(|_| ()),
         },
@@ -76,10 +90,11 @@ async fn main() -> ExitCode {
         Commands::Run {
             tool,
             version,
+            backend,
             args,
-        } => chipsmith_core::run_tool("quartus-prime", &version, &tool, &args, None).await,
+        } => chipsmith_core::run_tool(&backend, &version, &tool, &args, None).await,
 
-        Commands::Which { version } => match chipsmith_core::which("quartus-prime", &version) {
+        Commands::Which { version, backend } => match chipsmith_core::which(&backend, &version) {
             Ok((dir, true)) => {
                 println!("{}", dir.display());
                 Ok(())

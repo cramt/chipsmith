@@ -1,36 +1,13 @@
 use std::path::PathBuf;
 
-use crate::download;
+use chipsmith_quartus_common::download;
+use chipsmith_quartus_common::install::{
+    cdn_url, install_device_support, lookup as common_lookup, DeviceSupport, KnownVersion,
+    QuartusVersion,
+};
 use chipsmith_toolchain::error::ChipsmithError;
 
 use crate::runner;
-
-pub struct QuartusVersion {
-    pub version: &'static str,
-    pub revision: &'static str,
-    pub filename: &'static str,
-}
-
-pub struct DeviceSupport {
-    pub family: &'static str,
-    pub filename: &'static str,
-}
-
-pub struct KnownVersion {
-    pub key: &'static str,
-    pub download: QuartusVersion,
-    pub install_subdir: &'static str,
-    pub devices: &'static [DeviceSupport],
-}
-
-const QUARTUS_CDN: &str = "https://downloads.intel.com/akdlm/software/acdsinst";
-
-fn cdn_url(ver: &QuartusVersion, filename: &str) -> String {
-    format!(
-        "{}/{}/{}/ib_installers/{}",
-        QUARTUS_CDN, ver.version, ver.revision, filename
-    )
-}
 
 pub const VERSIONS: &[KnownVersion] = &[
     KnownVersion {
@@ -95,13 +72,7 @@ pub const VERSIONS: &[KnownVersion] = &[
 pub const LATEST: &str = "23.1";
 
 pub fn lookup(key: &str) -> Result<&'static KnownVersion, ChipsmithError> {
-    VERSIONS
-        .iter()
-        .find(|v| v.key == key)
-        .ok_or_else(|| ChipsmithError::UnknownVersion {
-            version: key.to_string(),
-            available: VERSIONS.iter().map(|v| v.key.to_string()).collect(),
-        })
+    common_lookup(VERSIONS, key)
 }
 
 pub fn install_dir_for(version: &KnownVersion) -> PathBuf {
@@ -141,39 +112,36 @@ pub async fn ensure_installed(version_key: &str) -> Result<PathBuf, ChipsmithErr
         runner::install_quartus(&installer, &dir).await?;
     }
 
-    // Install any missing device support packages
-    for device in version.devices {
-        let marker = dir.join(".chipsmith_device_installed_").join(device.family);
-        if marker.exists() {
-            continue;
-        }
-
-        eprintln!("Installing {} device support...", device.family);
-        let url = cdn_url(&version.download, device.filename);
-        match download::download_file(&url, device.filename).await {
-            Ok(qdz) => {
-                if let Err(e) = download::unzip(&qdz, &dir).await {
-                    eprintln!(
-                        "Warning: failed to install {} device support: {}",
-                        device.family, e
-                    );
-                    continue;
-                }
-            }
-            Err(e) => {
-                eprintln!(
-                    "Warning: failed to download {} device support: {}",
-                    device.family, e
-                );
-                continue;
-            }
-        }
-
-        if let Some(parent) = marker.parent() {
-            std::fs::create_dir_all(parent)?;
-        }
-        std::fs::write(&marker, "")?;
-    }
+    install_device_support(version, &dir).await?;
 
     Ok(dir)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn lookup_finds_all_versions() {
+        assert!(lookup("23.1").is_ok());
+        assert!(lookup("22.1").is_ok());
+        assert!(lookup("24.1").is_ok());
+    }
+
+    #[test]
+    fn lookup_rejects_unknown() {
+        assert!(lookup("99.0").is_err());
+    }
+
+    #[test]
+    fn latest_is_valid() {
+        assert!(lookup(LATEST).is_ok());
+    }
+
+    #[test]
+    fn install_dir_contains_version() {
+        let ver = lookup("23.1").unwrap();
+        let dir = install_dir_for(ver);
+        assert!(dir.ends_with("intelFPGA_lite/23.1std"));
+    }
 }

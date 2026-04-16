@@ -1,8 +1,6 @@
 mod build;
-mod download;
 mod install;
 mod nixos;
-mod qsf;
 mod runner;
 
 use std::path::{Path, PathBuf};
@@ -15,18 +13,7 @@ pub struct QuartusII13Toolchain;
 
 pub const LATEST: &str = install::LATEST;
 
-impl QuartusII13Toolchain {
-    pub async fn install_from_local(
-        &self,
-        installer: &Path,
-        version: &str,
-    ) -> Result<(), ChipsmithError> {
-        let ver = install::lookup(version)?;
-        let dir = install::install_dir_for(ver);
-        runner::install_quartus(installer, &dir).await
-    }
-}
-
+#[async_trait::async_trait]
 impl Toolchain for QuartusII13Toolchain {
     fn name(&self) -> &str {
         "quartus-ii-13"
@@ -42,35 +29,36 @@ impl Toolchain for QuartusII13Toolchain {
         Ok(install::is_installed(ver))
     }
 
-    fn ensure_installed(
-        &self,
-        version: &str,
-    ) -> impl std::future::Future<Output = Result<PathBuf, ChipsmithError>> + Send {
-        install::ensure_installed(version)
+    async fn ensure_installed(&self, version: &str) -> Result<PathBuf, ChipsmithError> {
+        install::ensure_installed(version).await
     }
 
-    fn run_tool(
+    async fn install_from_local(
+        &self,
+        installer: &Path,
+        version: &str,
+    ) -> Result<(), ChipsmithError> {
+        let ver = install::lookup(version)?;
+        let dir = install::install_dir_for(ver);
+        runner::install_quartus(installer, &dir).await
+    }
+
+    async fn run_tool(
         &self,
         version: &str,
         tool: &str,
         args: &[String],
         working_dir: Option<&Path>,
-    ) -> impl std::future::Future<Output = Result<(), ChipsmithError>> + Send {
-        let version = version.to_string();
-        let tool = tool.to_string();
-        let args = args.to_vec();
-        let working_dir = working_dir.map(|p| p.to_path_buf());
-        async move {
-            let dir = install::ensure_installed(&version).await?;
-            runner::run_tool(&dir, &tool, &args, working_dir.as_deref()).await
-        }
+    ) -> Result<(), ChipsmithError> {
+        let dir = install::ensure_installed(version).await?;
+        runner::run_tool(&dir, tool, args, working_dir).await
     }
 
-    fn build(
+    async fn build(
         &self,
         project_dir: &Path,
         manifest: &Manifest,
-    ) -> impl std::future::Future<Output = Result<PathBuf, ChipsmithError>> + Send {
-        build::build(project_dir, manifest)
+    ) -> Result<PathBuf, ChipsmithError> {
+        build::build(project_dir, manifest).await
     }
 }

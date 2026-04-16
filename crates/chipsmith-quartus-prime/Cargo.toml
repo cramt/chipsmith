@@ -4,10 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+async-trait = "0.1"
 dirs = "6"
 chipsmith-toolchain = { path = "../chipsmith-toolchain" }
-futures-util = "0.3"
-reqwest = { version = "0.12", features = ["stream"] }
+chipsmith-quartus-common = { path = "../chipsmith-quartus-common" }
 facet = "0.46"
 facet-json = "0.46"
 tokio = { version = "1", features = ["process", "fs", "io-util"] }
