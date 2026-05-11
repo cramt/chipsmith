@@ -7,5 +7,5 @@ edition = "2021"
 chipsmith-toolchain = { path = "../chipsmith-toolchain" }
 dirs = "6"
 futures-util = "0.3"
-reqwest = { version = "0.12", features = ["stream"] }
+reqwest = { version = "0.13", features = ["stream"] }
 tokio = { version = "1", features = ["process", "fs", "io-util"] }
